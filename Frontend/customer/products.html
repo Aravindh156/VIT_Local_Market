@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Products by Retailer</title>
+    <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Products from Retailer <span id="retailerTitle"></span></h1>
+        <ul id="productsList"></ul>
+    </div>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const retailerId = urlParams.get('retailerId');
+        document.getElementById('retailerTitle').textContent = `ID ${retailerId}`;
+
+        async function fetchProducts() {
+            const response = await fetch(`http://localhost:8000/customer/products/${retailerId}`);
+            const data = await response.json();
+            const productsList = document.getElementById('productsList');
+            data.forEach(product => {
+                const li = document.createElement('li');
+                li.textContent = `${product.name} - $${product.price} - ${product.quantity} available`;
+                productsList.appendChild(li);
+            });
+        }
+        fetchProducts();
+    </script>
+</body>
+
+</html>

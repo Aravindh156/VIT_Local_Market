@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Retailer Inventory</title>
+    <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Retailer Inventory</h1>
+        <ul id="inventoryList"></ul>
+    </div>
+    <script>
+        // You'll need to store retailer ID in a session or local storage after login
+        const retailerId = 1;  // Replace with actual retailer ID
+        async function fetchInventory() {
+            const response = await fetch(`http://localhost:8000/retailer/inventory/${retailerId}`);
+            const data = await response.json();
+            const inventoryList = document.getElementById('inventoryList');
+            data.forEach(product => {
+                const li = document.createElement('li');
+                li.textContent = `${product.name} - $${product.price} - ${product.quantity} available`;
+                inventoryList.appendChild(li);
+            });
+        }
+        fetchInventory();
+    </script>
+</body>
+
+</html>

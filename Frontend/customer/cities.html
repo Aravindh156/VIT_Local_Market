@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Available Cities</title>
+    <link rel="stylesheet" href="../styles.css" />
+</head>
+
+<body>
+    <div class="container">
+        <h1>Available Cities</h1>
+        <ul id="citiesList"></ul>
+    </div>
+
+    <script>
+        async function fetchCities() {
+            try {
+                const response = await fetch('http://localhost:8000/customer/cities');
+                if (!response.ok) {
+                    document.getElementById('citiesList').innerHTML = '<li>Failed to load cities.</li>';
+                    return;
+                }
+                const data = await response.json();
+                const citiesList = document.getElementById('citiesList');
+                citiesList.innerHTML = '';
+
+                data.cities.forEach(city => {
+                    const li = document.createElement('li');
+                    li.textContent = city;
+                    li.style.cursor = 'pointer';
+                    li.style.color = '#007bff';
+                    li.addEventListener('click', () => {
+                        // Navigate to retailers page with city as query param
+                        window.location.href = `retailers.html?city=${encodeURIComponent(city)}`;
+                    });
+                    citiesList.appendChild(li);
+                });
+            } catch (error) {
+                document.getElementById('citiesList').innerHTML = '<li>Error loading cities.</li>';
+                console.error(error);
+            }
+        }
+
+        // Optionally check if user is logged in (localStorage)
+        const username = localStorage.getItem('customerUsername');
+        if (!username) {
+            alert('Please login first.');
+            window.location.href = 'login.html';
+        } else {
+            fetchCities();
+        }
+    </script>
+</body>
+
+</html>

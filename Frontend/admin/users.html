@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>All Users</title>
+    <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>All Users</h1>
+        <ul id="usersList"></ul>
+    </div>
+    <script>
+        async function fetchUsers() {
+            const response = await fetch('http://localhost:8000/admin/users');
+            const data = await response.json();
+            const usersList = document.getElementById('usersList');
+            data.forEach(user => {
+                const li = document.createElement('li');
+                li.textContent = `${user.username} (${user.role}) - ${user.status}`;
+                usersList.appendChild(li);
+            });
+        }
+        fetchUsers();
+    </script>
+</body>
+
+</html>

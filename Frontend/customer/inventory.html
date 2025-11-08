@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Retailer Inventory</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f9f9f9;
+            padding: 40px 20px;
+            max-width: 960px;
+            margin: auto;
+            color: #333;
+        }
+
+        #message {
+            margin-bottom: 20px;
+            font-weight: 600;
+            font-size: 1rem;
+            color: #27ae60;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 12px;
+            margin-bottom: 30px;
+        }
+
+        th {
+            background-color: #fafafa;
+            color: #555;
+            font-weight: 600;
+            padding: 14px 12px;
+            border-bottom: 2px solid #eee;
+            text-align: center;
+        }
+
+        td {
+            background-color: #ffffff;
+            padding: 14px 12px;
+            text-align: center;
+            border-bottom: 1px solid #f0f0f0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            border-radius: 8px;
+        }
+
+        input[type="number"] {
+            width: 70px;
+            padding: 8px;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        input[type="number"]:focus {
+            border-color: #ff4b2b;
+            box-shadow: 0 0 0 3px rgba(255, 75, 43, 0.2);
+            outline: none;
+        }
+
+        button {
+            padding: 10px 18px;
+            font-size: 1rem;
+            background: linear-gradient(to right, #4147ff, #2b6bff);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(255, 75, 43, 0.2);
+        }
+
+        button:hover {
+            background: linear-gradient(to right, #e84362, #e14a29);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 75, 43, 0.3);
+        }
+
+        @media (max-width: 600px) {
+
+            table,
+            th,
+            td {
+                font-size: 0.9rem;
+            }
+
+            input[type="number"] {
+                width: 100%;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+
+</head>
+
+<body>
+    <h1>Retailer Inventory</h1>
+    <div id="message"></div>
+    <table id="inventoryTable">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Price (₹)</th>
+                <th>Available Qty</th>
+                <th>Category</th>
+                <th>Order Qty</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    <a href="cart.html">Go to Cart 🛒</a>
+
+    <script>
+        const retailerId = 1; //localStorage.getItem("retailerId") ||
+        const inventoryTableBody = document.querySelector("#inventoryTable tbody");
+        const messageDiv = document.getElementById("message");
+
+        let products = [];
+
+        async function loadProducts() {
+            try {
+                const res = await fetch(`http://127.0.0.1:8000/customer/products/${retailerId}`);
+                if (!res.ok) throw new Error(`Failed to fetch products: ${res.status}`);
+                products = await res.json();
+                renderProducts();
+            } catch (err) {
+                messageDiv.style.color = "red";
+                messageDiv.textContent = err.message;
+            }
+        }
+
+        function renderProducts() {
+            inventoryTableBody.innerHTML = "";
+            products.forEach((p, idx) => {
+                inventoryTableBody.innerHTML += `
+          <tr>
+            <td>${p.name}</td>
+            <td>${p.price.toFixed(2)}</td>
+            <td id="availQty-${idx}">${p.quantity}</td>
+            <td>${p.category}</td>
+            <td><input type="number" id="orderQty-${idx}" min="1" max="${p.quantity}" value="1" ${p.quantity === 0 ? 'disabled' : ''} /></td>
+            <td><button onclick="addToCart(${idx}, this)" ${p.quantity === 0 ? 'disabled' : ''}>Add to Cart</button></td>
+          </tr>
+        `;
+            });
+        }
+
+        async function addToCart(idx, button) {
+            const product = products[idx];
+            const qtyInput = document.getElementById(`orderQty-${idx}`);
+            const qty = parseInt(qtyInput.value);
+
+            if (isNaN(qty) || qty < 1) {
+                alert("Please enter a valid quantity (1 or more).");
+                return;
+            }
+            if (qty > product.quantity) {
+                alert(`Cannot order more than available quantity (${product.quantity}).`);
+                return;
+            }
+
+            // Optimistic frontend update
+            product.quantity -= qty;
+            document.getElementById(`availQty-${idx}`).textContent = product.quantity;
+
+            if (product.quantity === 0) {
+                qtyInput.value = 0;
+                qtyInput.disabled = true;
+                button.disabled = true;
+            }
+
+            // Update cart in localStorage
+            let cart = JSON.parse(localStorage.getItem("cart")) || [];
+            const existingIndex = cart.findIndex(item => item.product === product.name && item.retailer_id == retailerId);
+
+            if (existingIndex !== -1) {
+                cart[existingIndex].quantity += qty;
+            } else {
+                cart.push({
+                    retailer_id: retailerId,
+                    product: product.name,
+                    price: product.price,
+                    quantity: qty
+                });
+            }
+
+            localStorage.setItem("cart", JSON.stringify(cart));
+            alert(`${qty} x ${product.name} added to cart.`);
+        }
+
+        loadProducts();
+    </script>
+</body>
+
+</html>

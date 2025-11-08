@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>All Retailers</title>
+    <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>All Retailers</h1>
+        <ul id="retailersList"></ul>
+    </div>
+    <script>
+        async function fetchRetailers() {
+            const response = await fetch('http://localhost:8000/admin/retailers');
+            const data = await response.json();
+            const retailersList = document.getElementById('retailersList');
+            data.forEach(retailer => {
+                const li = document.createElement('li');
+                li.textContent = `${retailer.name} - ${retailer.location}`;
+                retailersList.appendChild(li);
+            });
+        }
+        fetchRetailers();
+    </script>
+</body>
+
+</html>

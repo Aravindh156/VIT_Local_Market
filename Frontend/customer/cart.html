@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Shopping Cart</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f9f9f9;
+            padding: 40px 20px;
+            max-width: 960px;
+            margin: auto;
+            color: #333;
+        }
+
+        #message {
+            margin-bottom: 20px;
+            font-weight: 600;
+            font-size: 1rem;
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 12px;
+            margin-bottom: 30px;
+        }
+
+        th {
+            background-color: #fafafa;
+            color: #555;
+            font-weight: 600;
+            padding: 14px 12px;
+            border-bottom: 2px solid #eee;
+            text-align: center;
+        }
+
+        td {
+            background-color: #fff;
+            padding: 14px 12px;
+            text-align: center;
+            border-bottom: 1px solid #f0f0f0;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+        }
+
+        input[type="number"] {
+            width: 70px;
+            padding: 8px;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        input[type="number"]:focus {
+            border-color: #0f7ce2;
+            box-shadow: 0 0 0 3px rgba(10, 68, 126, 0.2);
+            outline: none;
+        }
+
+        /* Remove Button */
+        button {
+            padding: 10px 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(to right, #0d03c4, #0d09de);
+            color: white;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.2);
+        }
+
+        button:hover {
+            background: linear-gradient(to right, #208fd99f, #67849c);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(56, 98, 124, 0.25);
+        }
+
+        /* Place Order Button */
+        #placeOrderBtn {
+            background: linear-gradient(to right, #28a745, #218838);
+            padding: 14px 24px;
+            color: white;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            box-shadow: 0 6px 18px rgba(40, 167, 69, 0.2);
+            margin-top: 20px;
+        }
+
+        #placeOrderBtn:hover {
+            background: linear-gradient(to right, #218838, #1e7e34);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(40, 167, 69, 0.3);
+        }
+
+        #placeOrderBtn:disabled {
+            background-color: #bbb;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        @media (max-width: 600px) {
+
+            table,
+            th,
+            td {
+                font-size: 0.9rem;
+            }
+
+            input[type="number"] {
+                width: 100%;
+            }
+
+            button,
+            #placeOrderBtn {
+                width: 100%;
+            }
+        }
+    </style>
+
+</head>
+
+<body>
+    <h1>Your Shopping Cart</h1>
+    <div id="message"></div>
+    <table>
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Price (₹)</th>
+                <th>Quantity</th>
+                <th>Total</th>
+                <th>Remove</th>
+            </tr>
+        </thead>
+        <tbody id="cartBody"></tbody>
+    </table>
+    <h3 id="grandTotal">Grand Total: ₹0.00</h3>
+    <button id="placeOrderBtn" disabled>Place Order</button>
+    <br /><br />
+    <a href="inventory.html">Back to Inventory</a>
+
+    <script>
+        const cartBody = document.getElementById('cartBody');
+        const grandTotalEl = document.getElementById('grandTotal');
+        const placeOrderBtn = document.getElementById('placeOrderBtn');
+
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+        function renderCart() {
+            cartBody.innerHTML = '';
+            if (cart.length === 0) {
+                cartBody.innerHTML = '<tr><td colspan="5">Your cart is empty.</td></tr>';
+                grandTotalEl.textContent = 'Grand Total: ₹0.00';
+                placeOrderBtn.disabled = true;
+                return;
+            }
+
+            placeOrderBtn.disabled = false;
+            let grandTotal = 0;
+
+            cart.forEach((item, index) => {
+                const total = item.price * item.quantity;
+                grandTotal += total;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+          <td>${item.product}</td>
+          <td>₹${item.price.toFixed(2)}</td>
+          <td><input type="number" min="1" value="${item.quantity}" data-index="${index}" /></td>
+          <td>₹${total.toFixed(2)}</td>
+          <td><button data-index="${index}">Remove</button></td>
+        `;
+                cartBody.appendChild(row);
+            });
+
+            grandTotalEl.textContent = `Grand Total: ₹${grandTotal.toFixed(2)}`;
+        }
+
+        cartBody.addEventListener('change', e => {
+            if (e.target.tagName === 'INPUT') {
+                const index = e.target.getAttribute('data-index');
+                const newQty = parseInt(e.target.value);
+                if (isNaN(newQty) || newQty < 1) {
+                    alert('Quantity must be at least 1');
+                    renderCart();
+                    return;
+                }
+                cart[index].quantity = newQty;
+                localStorage.setItem('cart', JSON.stringify(cart));
+                renderCart();
+            }
+        });
+
+        cartBody.addEventListener('click', e => {
+            if (e.target.tagName === 'BUTTON') {
+                const index = e.target.getAttribute('data-index');
+                cart.splice(index, 1);
+                localStorage.setItem('cart', JSON.stringify(cart));
+                renderCart();
+            }
+        });
+
+        placeOrderBtn.addEventListener('click', async () => {
+            if (cart.length === 0) {
+                alert('Your cart is empty.');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/customer/order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(cart),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to place order.');
+                }
+
+                const data = await response.json();
+                alert(`Order placed successfully! Grand total: ₹${data.grand_total.toFixed(2)}`);
+
+                localStorage.removeItem('cart');
+                cart = [];
+                renderCart();
+
+            } catch (error) {
+                alert(`Error placing order: ${error.message}`);
+            }
+        });
+
+        renderCart();
+    </script>
+</body>
+
+</html>

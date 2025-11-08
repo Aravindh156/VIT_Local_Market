@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Retailers</title>
+    <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Retailers</h1>
+        <ul id="retailersList"></ul>
+    </div>
+
+    <script>
+        async function fetchRetailers() {
+            try {
+                const city = new URLSearchParams(window.location.search).get('city');
+                const response = await fetch(`http://localhost:8000/customer/retailers/${city}`);
+                if (!response.ok) {
+                    document.getElementById('retailersList').innerHTML = '<li>Failed to load retailers.</li>';
+                    return;
+                }
+                const data = await response.json();
+                const retailersList = document.getElementById('retailersList');
+                retailersList.innerHTML = '';
+
+                data.forEach(retailer => {
+                    const li = document.createElement('li');
+                    li.textContent = retailer.name;
+                    li.style.cursor = 'pointer';
+                    li.style.color = '#007bff';
+                    li.addEventListener('click', () => {
+                        // Redirect to inventory page with retailer ID as query param
+                        window.location.href = `inventory.html?retailerId=${encodeURIComponent(retailer.id)}`;
+                    });
+                    retailersList.appendChild(li);
+                });
+            } catch (error) {
+                document.getElementById('retailersList').innerHTML = '<li>Error loading retailers.</li>';
+                console.error(error);
+            }
+        }
+
+        fetchRetailers();
+    </script>
+</body>
+
+</html>
